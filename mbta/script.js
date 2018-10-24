@@ -4,7 +4,7 @@ var num_future_times = 6;
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
     	center: {lat: 42.352271, lng: -71.05524200000001},
-        zoom: 11
+        zoom: 12
     });
 
     buildMarkers(map);
@@ -25,14 +25,15 @@ function buildMarkers(map)
 	    marker = new google.maps.Marker({
 	        position: new google.maps.LatLng(stations[i][1]),
 	        map: map,
-	       	icon: 'metro.png'
+	       	icon: 'metro2.png',
+	       	title: stations[i][0]
 	    });
 
 	    google.maps.event.addListener(marker, 'click', (function(marker, i) {
 	        return function() {
 
 	        	/* Content is type JSON parsed data */
-	        	getContent(stations[i][2], infowindow);
+	        	getContent(stations[i][2], infowindow, marker);
 				infowindow.open(map, marker);
 	        }
     	})(marker, i));
@@ -79,12 +80,12 @@ function buildMe(map)
 			me.setMap(map);
 			map.setCenter(myLatLng);
 
-			findClosest(me, map);
+			findClosest(me, map, myLatLng);
 		});
 	}
 }
 
-function findClosest (me, map)
+function findClosest (me, map, myLatLng)
 {
 	var closest_station;
 	var smallest_distance = Number.MAX_VALUE;
@@ -98,16 +99,19 @@ function findClosest (me, map)
 		if (num < smallest_distance) {
 			smallest_distance = num;
 			closest_station = stations[i][0];
+			var closest = new google.maps.LatLng(latLngB.lat(), latLngB.lng());
 		}
 	}
 
-	//Put information in an infowindow
-	printClosest(me, map, smallest_distance, closest_station);
+	//Put information in an infowindow & create a Polyline
+	printClosest(me, map, smallest_distance, closest_station, closest);
 
 }
 
-function printClosest (me, map, smallest_distance, closest_station)
+function printClosest (me, map, smallest_distance, closest_station, closest)
 {
+	var num = closest.lat();
+
 	var miles = meters_to_Miles(smallest_distance);
 
 	var stuff = 'Closest: ' + closest_station + '<div>Distance:</div>' + miles + ' mile'; 
@@ -119,6 +123,22 @@ function printClosest (me, map, smallest_distance, closest_station)
 	// Open info window on click of marker
 	google.maps.event.addListener(me, 'click', function() {
 		infowindow.open(map, me);
+
+		var myCoordinates = [
+			{lat: me.position.lat(), lng: me.position.lng()},
+			{lat: closest.lat(), lng: closest.lng()}
+		];
+
+		var Path = new google.maps.Polyline({
+			path: myCoordinates,
+			geodesic: true,
+			strokeColor: '#0000FF',
+			strokeOpacity: 1.0,
+			strokeWeight: 2
+		});
+
+		Path.setMap(map);
+
 	});
 }
 
@@ -126,14 +146,12 @@ function meters_to_Miles(smallest_distance)
 {
 	var miles = (smallest_distance / 1609.344);
 
-	console.log(miles);
-
 	miles = Math.round(miles);
 
 	return miles;
 }
 
-function getContent (place_id, infowindow)
+function getContent (place_id, infowindow, marker)
 {
 	var content = "";
 	var currTime;
@@ -144,7 +162,7 @@ function getContent (place_id, infowindow)
 	// Step 2: Open the JSON file at remote location
 	request.open("GET", "https://chicken-of-the-sea.herokuapp.com/redline/schedule.json?stop_id=" + place_id, true);
 
-	// Step 3: set up callback for when HTTP response is returned (i.e., you get the JSON file back)
+	// Step 3: set up callback for when HTTP response is returned 
 	request.onreadystatechange = function() {
 
 		if (request.readyState == 4 && request.status == 200) {
@@ -162,8 +180,6 @@ function getContent (place_id, infowindow)
 					currTime = date.toLocaleTimeString();
 				}
 				else {
-					console.log(time);
-					console.log("yee");
 					currTime = "No data here!"
 				}				
 
@@ -175,8 +191,9 @@ function getContent (place_id, infowindow)
 
 				content += compass + currTime + '<br/>';
 			}
-
-				infowindow.setContent(content);			
+				var name = marker.title + ":" + '<br/>';
+				
+				infowindow.setContent(name + content);			
 
 		}
 		else if (request.readyState == 4 && request.status != 200) {
