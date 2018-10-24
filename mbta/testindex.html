@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang = "en">
+  <head>
+    <title>Red Line</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+  
+    <link rel="stylesheet" type="text/css" href="map_style.css">
+  </head>
+  <body>
+
+  <div id="printableArea">
+      <h1>Print me</h1>
+  </div>
+
+  <input type="button" onclick="changeDiv('printableArea')" value="print a div!" />
+      <script>
+      
+      var a = "SUP BOI"
+    function changeDiv(divName) {
+        document.getElementById(divName).innerHTML = a;
+        // var originalContents = document.body.innerHTML;
+
+        // var contentString = 
+
+        // document.body.innerHTML = printContents;
+
+        // document.body.innerHTML = originalContents;
+    }
+      </script>
+  </body>
+</html>
