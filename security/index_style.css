@@ -1,0 +1,14 @@
+img {
+  border: 1px solid #ddd;
+  max-width: 100%;
+  height: auto;
+}
+
+h2: {
+	font-family: serif
+
+}
+
+.details {
+	font-style: italic;
+}
